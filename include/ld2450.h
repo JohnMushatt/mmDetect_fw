@@ -23,6 +23,7 @@ typedef struct {
 } ld2450_frame_t;
 
 int ld2450_init(void);
+int16_t decode_sign_magnitude(uint8_t low, uint8_t high);
 
 void ld2450_task(void *pvParameter);
 

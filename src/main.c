@@ -27,7 +27,7 @@ void app_main(void)
     ESP_LOGI(TAG, "UART1 initialization successful");
     ESP_LOGI(TAG, "Starting LD2450 task");
     xTaskCreate(ld2450_task, "ld2450_task", 4096, NULL, 10, NULL);
-    ESP_LOGI(TAG, "LD2450 task started");
+    
     while (1) {
         gpio_set_level(BLINK_GPIO, 1);
         ESP_LOGI(TAG, "LED ON");
