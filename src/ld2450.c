@@ -2,6 +2,11 @@
 #include "freertos/projdefs.h"
 #include "mm_uart.h"
 #include <stdint.h>
+#include <sys/stat.h>
+#include "esp_log.h"
+#include "mm_udp.h"
+#include <math.h>
+
 static const char *TAG = "ld2450";
 int ld2450_init(void)
 {
@@ -9,8 +14,47 @@ int ld2450_init(void)
     return stat;
 }
 
+/**
+ * @brief Encode a sign magnitude value
+ * @param val The value to encode
+ * @param low The low byte of the value
+ * @param high The high byte of the value
+ */
+static void encode_sign_magnitude(int16_t val, uint8_t *low, uint8_t *high)
+{
+    uint16_t raw = (val < 0) ? (0x8000 | (uint16_t)(-val)) : (uint16_t)val;
+    *low  = raw & 0xFF;
+    *high = (raw >> 8) & 0xFF;
+}
+/**
+ * @brief Build a simulated LD2450 frame
+ * @param buf The buffer to build the frame
+ * @param frame The frame to build
+ */
+void ld2450_build_sim_frame(uint8_t *buf, const ld2450_frame_t *frame)
+{
+    memcpy(buf, FRAME_HEADER, 4);
+    uint8_t *p = buf + 4;
+    for (int i = 0; i < LD2450_MAX_TARGETS; i++) {
+        const ld2450_target_t *t = &frame->targets[i];
+        encode_sign_magnitude(t->x_mm,      &p[0], &p[1]);
+        encode_sign_magnitude(t->y_mm,      &p[2], &p[3]);
+        encode_sign_magnitude(t->speed_cms, &p[4], &p[5]);
+        p[6] = t->resolution_mm & 0xFF;
+        p[7] = (t->resolution_mm >> 8) & 0xFF;
+        p += 8;
+    }
+    memcpy(buf + 28, FRAME_TAIL, 2);
+}
 
-static bool ld2450_parse_frame(const uint8_t *buf, ld2450_frame_t *frame)
+
+/**
+ * @brief Parse a LD2450 frame
+ * @param buf The buffer to parse
+ * @param frame The frame to parse
+ * @return true if the frame is valid, false otherwise
+ */
+bool ld2450_parse_frame(const uint8_t *buf, ld2450_frame_t *frame)
 {
     if (memcmp(buf, FRAME_HEADER, sizeof(FRAME_HEADER)) != 0)
         return false;
@@ -34,6 +78,12 @@ static bool ld2450_parse_frame(const uint8_t *buf, ld2450_frame_t *frame)
     return true;
 }
 
+/**
+ * @brief Decode a sign magnitude value
+ * @param low The low byte of the value
+ * @param high The high byte of the value
+ * @return The decoded value
+ */
 int16_t decode_sign_magnitude(uint8_t low, uint8_t high)
 {
     uint16_t raw = low | (high << 8);
@@ -45,14 +95,36 @@ int16_t decode_sign_magnitude(uint8_t low, uint8_t high)
     return magnitude;
 }
 
-
+void ld2450_sim_task(void *pvParameter)
+{
+    uint8_t frame_buf[LD2450_FRAME_SIZE];
+    float angle = 0.0f;
+    while (1) {
+        ld2450_frame_t frame = {0};
+        frame.target_count = 1;
+        frame.targets[0].x_mm      = (int16_t)(1000.0f * sinf(angle));
+        frame.targets[0].y_mm      = (int16_t)(2000.0f + 500.0f * cosf(angle));
+        frame.targets[0].speed_cms = 50;
+        frame.targets[0].resolution_mm = 10;
+        angle += 0.05f;
+        ld2450_build_sim_frame(frame_buf, &frame);
+        //mm_udp_send(frame_buf, LD2450_FRAME_SIZE);
+        xQueueSend(mm_udp_tx_queue, frame_buf, portMAX_DELAY);
+        vTaskDelay(pdMS_TO_TICKS(100)); // ~10 Hz
+    }
+}
 extern uint8_t mm_uart1_rx_buffer[MM_UART_BUF_SIZE_256];
+/**
+ * @brief Task to receive and parse LD2450 frames from UART
+ * @param pvParameter The parameter for the task
+ */
 void ld2450_task(void *pvParameter)
 {
-    int frame_idx = 0;
+    int frame_idx = 0, stat = OK;
     //ld2450_frame_t frame;
     uint8_t rx_buf[MM_UART_BUF_SIZE_256];
     uint8_t frame_buf[LD2450_FRAME_SIZE];
+    char out[256];
     while(1)
     {
         int len = uart_read_bytes(MM_UART_1, rx_buf, MM_UART_BUF_SIZE_256, pdMS_TO_TICKS(100));
@@ -62,7 +134,7 @@ void ld2450_task(void *pvParameter)
         }
         else
         {
-            ESP_LOGI(TAG, "No data received");
+            //ESP_LOGI(TAG, "No data received");
             continue;
         }
         // Loop through the received data and build the frame buffer
@@ -88,20 +160,18 @@ void ld2450_task(void *pvParameter)
 
                 if(validFrame)
                 {
-                    //ESP_LOGI(TAG, "Frame received");
-                    ld2450_target_t *tgt;
-                    for(int t = 0; t < LD2450_MAX_TARGETS; t++)
+                    stat = mm_udp_send(frame_buf, LD2450_FRAME_SIZE);
+                    if( stat != OK)
                     {
-                        tgt = &frame.targets[t];
-                        ESP_LOGI(TAG, "Target %d: x=%d, y=%d, speed=%d, resolution=%d", t, tgt->x_mm, tgt->y_mm, tgt->speed_cms, tgt->resolution_mm);
+                        ESP_LOGE(TAG, "Failed to send UDP packet");
                     }
+
                 }
                 //ESP_LOGI(TAG, "Frame received");
                 frame_idx = 0;
             }
         }
 
-        //vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
 

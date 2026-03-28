@@ -26,5 +26,8 @@ int ld2450_init(void);
 int16_t decode_sign_magnitude(uint8_t low, uint8_t high);
 
 void ld2450_task(void *pvParameter);
-
+void ld2450_sim_task(void *pvParameter);
+void ld2450_build_sim_frame(uint8_t *buf, const ld2450_frame_t *frame);
+bool ld2450_parse_frame(const uint8_t *buf, ld2450_frame_t *frame);
+static void encode_sign_magnitude(int16_t val, uint8_t *low, uint8_t *high);
 #endif // LD2450_H
