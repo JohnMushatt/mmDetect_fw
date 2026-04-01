@@ -24,7 +24,7 @@ void app_main(void)
         ESP_LOGE(TAG, "WiFi initialization failed");
         return;
     }
-    stat = mm_udp_init("192.168.1.100", 5000);
+    stat = mm_udp_init("192.168.0.51", 5000);
     if( stat != ESP_OK)
     {
         ESP_LOGE(TAG, "UDP initialization failed");
@@ -58,7 +58,7 @@ void app_main(void)
 
 
 
-    stat = OK;//mm_uart1_init();
+    stat = mm_uart1_init();
     if( stat != OK)
     {
         ESP_LOGE(TAG, "UART driver installation failed");
@@ -74,8 +74,10 @@ void app_main(void)
 
     xTaskCreate(mm_udp_tx_task, "mm_udp_tx_task", 4096, NULL, 5, NULL);
     ESP_LOGI(TAG, "udp tx task created");
-    xTaskCreate(ld2450_sim_task, "ld2450_sim_task", 4096, NULL, 6, NULL);
-    ESP_LOGI(TAG, "sim task created");
+    //xTaskCreate(ld2450_sim_task, "ld2450_sim_task", 4096, NULL, 6, NULL);
+    //ESP_LOGI(TAG, "sim task created");
+    xTaskCreate(ld2450_task, "ld2450_task", 4096, NULL, 6, NULL);
+    ESP_LOGI(TAG, "ld2450 task created");
     while (1) {
         led_strip_set_pixel(led_strip, 0, 0, 16, 0);
         led_strip_refresh(led_strip);

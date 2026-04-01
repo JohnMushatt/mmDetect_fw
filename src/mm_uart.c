@@ -4,8 +4,8 @@
 #include "esp_log.h"
 #include "soc/clk_tree_defs.h"
 #define TAG "mm_uart"
-uint8_t mm_uart1_rx_buffer[MM_UART_BUF_SIZE_256];
-uint8_t mm_uart1_tx_buffer[MM_UART_BUF_SIZE_256];
+uint8_t mm_uart1_rx_buffer[MM_UART_BUF_SIZE_512];
+uint8_t mm_uart1_tx_buffer[MM_UART_BUF_SIZE_512];
 int mm_uart1_init(void)
 {
     int stat = OK;
@@ -20,8 +20,8 @@ int mm_uart1_init(void)
 
     // Install the UART driver and get the handle
     stat = uart_driver_install(MM_UART_1,
-         MM_UART_BUF_SIZE_1024, 
-         MM_UART_BUF_SIZE_1024, 
+         MM_UART_BUF_SIZE_512, 
+         MM_UART_BUF_SIZE_512, 
          0, 
          NULL, 
          0);
