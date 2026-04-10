@@ -11,6 +11,8 @@
 #include "mm_udp.h"
 #include "led_strip.h"
 
+#define HOST_IP_PHX "172.20.10.7"
+#define HOST_IP_SAN "192.168.0.76"
 
 static const char *TAG = "app_main";
 void app_main(void)
@@ -24,7 +26,7 @@ void app_main(void)
         ESP_LOGE(TAG, "WiFi initialization failed");
         return;
     }
-    stat = mm_udp_init("192.168.0.51", 5000);
+    stat = mm_udp_init(HOST_IP_PHX, 5000);
     if( stat != ESP_OK)
     {
         ESP_LOGE(TAG, "UDP initialization failed");

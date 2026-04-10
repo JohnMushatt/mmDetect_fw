@@ -114,7 +114,7 @@ void ld2450_sim_task(void *pvParameter)
         mm_proto_build_target_frame(proto_buf, frame_counter++, ts, &frame);
         xQueueSend(mm_udp_tx_queue, proto_buf, portMAX_DELAY);
         ESP_LOGI(TAG, "Sent frame %lu", (unsigned long)frame_counter);
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        vTaskDelay(pdMS_TO_TICKS(100));
     }
 }
 extern uint8_t mm_uart1_rx_buffer[MM_UART_BUF_SIZE_256];
@@ -164,11 +164,14 @@ void ld2450_task(void *pvParameter)
 
                 if(validFrame)
                 {
+                    ESP_LOGI(TAG, "Valid Frame");
+
                     uint8_t proto_buf[MM_PROTO_TARGET_FRAME_SIZE];
                     static uint32_t frame_counter = 0;
                     uint32_t ts = (uint32_t)(esp_timer_get_time() / 1000);
                     mm_proto_build_target_frame(proto_buf, frame_counter++, ts, &frame);
                     xQueueSend(mm_udp_tx_queue, proto_buf, portMAX_DELAY);
+                    vTaskDelay(pdMS_TO_TICKS(10));
 
 
                 }

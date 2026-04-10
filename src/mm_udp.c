@@ -48,7 +48,7 @@ void mm_udp_tx_task(void *pvParameter)
     while (1) {
         if (xQueueReceive(mm_udp_tx_queue, frame, portMAX_DELAY) == pdTRUE) {
             mm_udp_send(frame, MM_UDP_FRAME_SIZE);
-            ESP_LOGI(TAG, "Sent UDP packet: %d (%d bytes)", (int)frame[0], MM_UDP_FRAME_SIZE);
+            ESP_LOGI(TAG, "Sent UDP packet: (%d bytes)", MM_UDP_FRAME_SIZE);
         }
     }
 }

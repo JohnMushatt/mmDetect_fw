@@ -48,6 +48,7 @@ esp_err_t mm_wifi_init(void)
             .password = WIFI_PASSWORD,
         },
     };
+    ESP_LOGI(TAG, "SSID: %s", WIFI_SSID);
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_cfg));
     ESP_ERROR_CHECK(esp_wifi_start());
