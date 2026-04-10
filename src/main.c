@@ -12,8 +12,9 @@
 #include "led_strip.h"
 
 #define HOST_IP_PHX "172.20.10.7"
-#define HOST_IP_SAN "192.168.0.76"
-
+#define HOST_IP_SAN "192.168.0.95"
+#define WINDOWS_PORT 7000
+#define MAC_PORT 5000
 static const char *TAG = "app_main";
 void app_main(void)
 {
@@ -26,7 +27,7 @@ void app_main(void)
         ESP_LOGE(TAG, "WiFi initialization failed");
         return;
     }
-    stat = mm_udp_init(HOST_IP_PHX, 5000);
+    stat = mm_udp_init(HOST_IP_SAN, WINDOWS_PORT);
     if( stat != ESP_OK)
     {
         ESP_LOGE(TAG, "UDP initialization failed");
@@ -76,10 +77,10 @@ void app_main(void)
 
     xTaskCreate(mm_udp_tx_task, "mm_udp_tx_task", 4096, NULL, 5, NULL);
     ESP_LOGI(TAG, "udp tx task created");
-    //xTaskCreate(ld2450_sim_task, "ld2450_sim_task", 4096, NULL, 6, NULL);
-    //ESP_LOGI(TAG, "sim task created");
-    xTaskCreate(ld2450_task, "ld2450_task", 4096, NULL, 6, NULL);
-    ESP_LOGI(TAG, "ld2450 task created");
+    xTaskCreate(ld2450_sim_task, "ld2450_sim_task", 4096, NULL, 6, NULL);
+    ESP_LOGI(TAG, "sim task created");
+   // xTaskCreate(ld2450_task, "ld2450_task", 4096, NULL, 6, NULL);
+    //ESP_LOGI(TAG, "ld2450 task created");
     while (1) {
         led_strip_set_pixel(led_strip, 0, 0, 16, 0);
         led_strip_refresh(led_strip);
