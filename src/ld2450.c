@@ -129,16 +129,22 @@ void ld2450_task(void *pvParameter)
     uint8_t rx_buf[MM_UART_BUF_SIZE_512];
     uint8_t frame_buf[LD2450_FRAME_SIZE];
     //char out[256];
+    int count = 0;
     while(1)
     {
-        int len = uart_read_bytes(MM_UART_1, rx_buf, MM_UART_BUF_SIZE_512, pdMS_TO_TICKS(100));
+        int len = uart_read_bytes(MM_UART_1, rx_buf, MM_UART_BUF_SIZE_512, pdMS_TO_TICKS(10));
         if( len > 0)
         {
-            ESP_LOGI(TAG, "Received %d bytes", len);
+            //ESP_LOGI(TAG, "Received %d bytes", len);
         }
         else
         {
-            ESP_LOGI(TAG, "No data received");
+            count++;
+            if(count > 40)
+            {
+                ESP_LOGI(TAG, "No data received");
+                count = 0;
+            }
             continue;
         }
         // Loop through the received data and build the frame buffer
@@ -164,14 +170,14 @@ void ld2450_task(void *pvParameter)
 
                 if(validFrame)
                 {
-                    ESP_LOGI(TAG, "Valid Frame");
+                    //ESP_LOGI(TAG, "Valid Frame");
 
                     uint8_t proto_buf[MM_PROTO_TARGET_FRAME_SIZE];
                     static uint32_t frame_counter = 0;
                     uint32_t ts = (uint32_t)(esp_timer_get_time() / 1000);
                     mm_proto_build_target_frame(proto_buf, frame_counter++, ts, &frame);
                     xQueueSend(mm_udp_tx_queue, proto_buf, portMAX_DELAY);
-                    vTaskDelay(pdMS_TO_TICKS(10));
+                    //vTaskDelay(pdMS_TO_TICKS(10));
 
 
                 }

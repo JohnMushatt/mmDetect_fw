@@ -5,7 +5,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "mm_protocol.h"
-#define MM_UDP_QUEUE_LEN  5
+#define MM_UDP_QUEUE_LEN  20
 #define MM_UDP_FRAME_SIZE MM_PROTO_TARGET_FRAME_SIZE
 
 extern QueueHandle_t mm_udp_tx_queue;
